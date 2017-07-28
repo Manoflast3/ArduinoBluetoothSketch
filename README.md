@@ -1,0 +1,1 @@
+Bluetooth code to communicate with the Mobile app for the Digital hearing aid. 
