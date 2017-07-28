@@ -1,16 +1,19 @@
+#include <CurieTimerOne.h>
 #include <SoftwareSerial.h>
-#include <map.h>
-#include <env.h>
-#include "bluetooth.h"
 #include <CurieBLE.h>
-
-struct item<unsigned char, unsigned long>* codes = getCodes();
 
 /****************************************
  *                                      *
  *  Arduino functions                   *
  *                                      *
  ****************************************/
+
+ /* Macros */ 
+
+ #define SOUND_SENSOR A3
+ #define LED A2
+ #define ESP8266 D1
+ #define threshold 100
  
 BLEPeripheral blePeripheral;       // BLE Peripheral Device (the board you're programming)
 BLEService batteryService("180F"); 
@@ -25,7 +28,7 @@ void setup() {
   Serial.print("Using remote with programming button ");
   Serial.print(ROBOT_IR_REMOTE_FUNC, HEX);
   Serial.println();
-
+  pins_init();
   pinMode(ROBOT_IR_PIN, INPUT);
 }
 
@@ -33,6 +36,17 @@ void loop() {
   // listen for BLE peripherals to connect:
   BLECentral central = blePeripheral.central();
 
+  // Soundsensor, for debugging 
+  int sensorValue = analogRead(SOUND_SENSOR);
+
+  Serial.print("sensorValue ");
+  Serial.println(sensorValue);
+  if(sensorValue > THRESHOLD_VALUE){
+    turnOnLED();
+    delay(200);
+  } 
+  turnOffLED();
+  
   // if a central is connected to peripheral:
   if (central) {
     Serial.print("Connected to central: ");
@@ -57,45 +71,20 @@ void loop() {
 }
 
 int sendAudiotoServer() { 
-  
+  digitalWrite(ESP8266, currAudio);
   return 0; 
 } 
+
+
+void pins_init(){
+  pinMode(LED, OUTPUT);
+  pinMode(SOUND_SENSOR, INPUT); 
 }
 
-SoftwareSerial bluetooth(ROBOT_BT_RX_PIN, ROBOT_BT_TX_PIN);
-Robot robot = new Robot(true);
-struct item<unsigned char, int>* codes = getCodes();
-
-/****************************************
- *                                      *
- *  Arduino functions                   *
- *                                      *
- ****************************************/
-
-void setup() {
-  Serial.begin(9600);
-  bluetooth.begin(9600);
-  Serial.println("=======================");
+void turnOnLED(){
+  digitalWrite(LED,HIGH);
 }
 
-void loop() {
-//  unsigned short darkness = analogRead(A0);
-//  if (Env::isDark(darkness)) {
-//    arduino.turnLightsOn();
-//  } else {
-//    arduino.turnLightsOff();
-//  }
-
-  if (bluetooth.available()) {
-    int code = bluetooth.read();
-    if (code == 3) {
-      return;
-    }
-    struct item<unsigned char, int>* item = findItemByValue(codes, code);
-    if (item != NULL) {
-      arduino.execute(item->key);
-    }
-  }
-
-  delay(DELAY_LOOP);
+void turnOffLED(){
+  digitalWrite(LED,LOW);
 }
